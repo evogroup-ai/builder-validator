@@ -1,0 +1,18 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "evogroup-plugins",
+  "description": "EvoGroup plugins for Claude — adversarial spec review, BDD scenario generation, and quality assurance tools",
+  "owner": {
+    "name": "EvoGroup",
+    "email": "info@evogroup.ai"
+  },
+  "plugins": [
+    {
+      "name": "builder-validator",
+      "description": "Run adversarial Builder-Validator cycles on specifications to find gaps, dead-end states, and missing requirements before writing code. Based on EvoGroup Pipeline v3.",
+      "source": ".",
+      "category": "development",
+      "homepage": "https://github.com/evogroup-ai/builder-validator"
+    }
+  ]
+}
