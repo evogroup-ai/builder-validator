@@ -37,7 +37,7 @@
       "assertions": [
         {"text": "Validator identifies the 'Approved with no resolution' dead-end: a document can stay in Approved state forever because the spec defines no timeout, no reminder, and no escalation for creating a resolution. This is the most critical dead-end in this spec — missing it means Validator is not doing its job."},
         {"text": "Open questions are specific and actionable — each one describes a concrete situation that a developer would face, proposes 2-3 realistic options (not academic), and rates severity. Vague questions like 'what about edge cases?' do not count."},
-        {"text": "Validator finds at least one issue that the Builder artifacts did NOT already flag. The value of Validator is finding what Builder missed — if Validator only confirms what Builder already tagged as GAP, it's adding no value."},
+        {"text": "Validator finds at least one issue beyond what Builder already flagged. Builder artifacts contain Scenario 10 tagged [GAP] about no resolution timeout, and builder-states.md lists 4 dead-ends explicitly. Validator must surface something NEW — a role conflict, timing collision, escalation chain break, or missing area that Builder's artifacts don't mention. If Validator only rephrases Builder's existing GAP tags and dead-end list, it's adding no value."},
         {"text": "Findings are grounded in the spec, not hallucinated. Every finding should reference which spec section or which Builder scenario it relates to. Findings about 'scalability' or 'performance' that the spec doesn't touch are noise, not signal."},
         {"text": "Validator does NOT reference how the Builder created the scenarios. No phrases like 'the builder assumed', 'this was built because', 'the reasoning behind this scenario'. Validator sees only artifacts and spec — it has no knowledge of Builder's process."},
         {"text": "Validator identifies functional areas the spec is completely silent about. The spec describes document lifecycle but says nothing about how users find documents (search), generate reports, or manage user accounts. These are legitimate missing areas for any enterprise system."}
@@ -87,11 +87,11 @@
       "expected_output": "Report with genuine isolation — Validator findings show independent thinking, not echoing Builder",
       "files": ["files/edi-excerpt.md"],
       "assertions": [
-        {"text": "Report contains all required sections and is coherent as a standalone document. A reader should understand the findings without needing to see the round artifacts."},
+        {"text": "Report contains these sections: Executive Summary, Verdict, Findings by Severity, Dead-End States, Open Questions, BDD Scenarios, Coverage Map, and Glossary. Each section has substantive content, not just a heading. A project manager reading only the report (without round artifacts) should understand what was found and what to do about it."},
         {"text": "Validator findings demonstrate independent analysis: they attack the spec and artifacts from a fresh perspective, not just confirm what Builder flagged. At least one Validator finding should address something Builder's scenarios didn't cover."},
         {"text": "No evidence of context leakage: Validator does not reference Builder's internal reasoning, does not use phrases that suggest awareness of Builder's process, and does not merely rephrase Builder's GAP tags as findings."},
-        {"text": "Findings quality is comparable to or better than fast mode. If strict mode produces fewer or weaker findings than fast mode, something is wrong with the agent prompts or orchestration."},
-        {"text": "summary.json is valid and consistent with report content."}
+        {"text": "Findings quality is comparable to or better than fast mode on three dimensions: (1) number of unique findings, (2) severity distribution — strict should not have fewer HIGH/BLOCKER findings, (3) specificity — findings should reference concrete spec sections and scenarios, not be vague. If strict mode is weaker on any dimension, something is wrong with agent isolation or prompts."},
+        {"text": "summary.json contains keys scenarios_total, open_questions, dead_ends, and verdict. The numbers match what the report describes — if the report lists 3 dead-end states, dead_ends should be 3, not 0 or 10. Verdict in JSON matches the verdict in the report's Verdict section."}
       ]
     },
     {
@@ -126,7 +126,7 @@
       "assertions": [
         {"text": "Findings demonstrate banking domain awareness: they address concerns specific to payment processing that a generic reviewer might miss — threshold splitting (structuring), concurrent session balance checks, sanctions list update timing, approval authority during organizational changes, end-of-day cutoff edge cases."},
         {"text": "At least one finding about timing or concurrency that the spec doesn't address: what happens if two operators submit payments that together exceed a limit but individually don't? What if an approver is replaced between approval stages? What if sanctions list updates while a payment is pending approval?"},
-        {"text": "Domain-enhanced findings add value beyond what the same spec would get without the --domain flag. The banking patterns should surface issues that generic dead-end/gap analysis would miss."}
+        {"text": "Domain-enhanced findings go beyond generic dead-end/gap analysis. Generic analysis of this spec would find: approval chain dead-ends, missing error handling for failed payments, no concurrent session rules. Banking domain analysis should additionally surface: structuring risk (splitting payments to avoid thresholds), sanctions list timing (what if list updates mid-approval), end-of-day cutoff races, or approval authority gaps during organizational changes. If all findings could have been made without banking knowledge, the domain flag added no value."}
       ]
     }
   ]
