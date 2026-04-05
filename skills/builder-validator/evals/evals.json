@@ -1,131 +1,132 @@
 {
   "skill_name": "builder-validator",
+  "grading_note": "All assertions are evaluated by Claude via semantic analysis. The grader reads the full output, the input spec, and the assertion text, then judges whether the assertion passes based on deep content understanding. No regex, no string matching, no programmatic checks.",
   "evals": [
     {
       "id": "builder-unit-minimal",
       "prompt": "You are a Builder agent. Read the spec at the provided path and create BDD scenarios, a state machine, a glossary, and a coverage map. Write all output files to the specified output directory.",
-      "expected_output": "4 artifact files with BDD scenarios in Gherkin format, state transitions, glossary, and coverage map",
+      "expected_output": "Artifacts that demonstrate genuine understanding of the todo app domain",
       "files": ["files/todo-spec.md"],
       "assertions": [
-        {"text": "Output contains at least 3 BDD scenarios with Given/When/Then format"},
-        {"text": "Each scenario has a confidence tag: SOLID, INFERRED, or GAP"},
-        {"text": "A state machine or state transition section lists at least 2 states (Open, Done) with transitions between them"},
-        {"text": "A glossary section defines at least 2 domain terms"},
-        {"text": "A coverage map lists feature areas with scenario counts"},
-        {"text": "No features are invented that are not in the spec or reasonably implied by it"}
+        {"text": "Scenarios demonstrate understanding of the todo domain by referencing specific entities from the spec: todos, titles, due dates, Open/Done statuses. Generic scenarios that could apply to any app do not pass."},
+        {"text": "Confidence tags reflect honest assessment: scenarios directly stated in the spec are SOLID, scenarios about behavior the spec doesn't address (e.g., what happens with overdue todos, empty titles, duplicate titles) are tagged INFERRED or GAP. If everything is tagged SOLID, the Builder is not thinking critically."},
+        {"text": "State machine captures the actual lifecycle from the spec: Open and Done states with transitions (mark as done, reopen). States are not invented beyond what the spec describes or implies."},
+        {"text": "Glossary defines terms in a way that would help a new developer understand the domain, not just repeat the spec verbatim. Definitions add context or clarify boundaries."},
+        {"text": "Coverage map honestly identifies what IS and ISN'T covered. If the spec has no mention of user authentication, error handling, or data persistence, the coverage map should flag these as uncovered — not pretend everything is handled."},
+        {"text": "Builder does NOT invent features the spec doesn't mention or imply. No categories, no priorities, no collaboration, no recurring todos — unless explicitly tagged as GAP with a note that this was assumed."}
       ]
     },
     {
       "id": "builder-unit-edi",
       "prompt": "You are a Builder agent. Read the EDI specification excerpt and create BDD scenarios, a state machine, a glossary, and a coverage map. This is a complex enterprise document workflow system.",
-      "expected_output": "Comprehensive artifacts covering document lifecycle, approval, execution, and notifications",
+      "expected_output": "Comprehensive artifacts that capture the complexity of the EDI workflow including approval chains, substitution, and execution",
       "files": ["files/edi-excerpt.md"],
       "assertions": [
-        {"text": "Output contains at least 15 BDD scenarios covering document lifecycle, approval, and execution"},
-        {"text": "State machine lists at least 5 states from the spec (Draft, On Registration, Registered, On Approval, Approved, On Execution, Executed, Archived)"},
-        {"text": "At least 3 scenarios are tagged GAP or INFERRED, indicating areas where the spec is silent"},
-        {"text": "Coverage map identifies at least one area with zero or low coverage"},
-        {"text": "References to external systems (e.g., registration number source) are tagged as GAP, not assumed"}
+        {"text": "Scenarios cover all major workflow areas from the spec: document registration (number assignment), approval chain (sequential approve/reject), execution (resolution, multiple executors, deadline), and notifications. Missing any of these areas indicates incomplete analysis."},
+        {"text": "State machine accurately reflects the 8 states and transitions from spec section 1.2. Transitions have correct triggers (e.g., 'author submits' not 'document is submitted'). No phantom states or transitions that aren't in the spec."},
+        {"text": "Builder identifies genuinely ambiguous areas in the spec and tags them appropriately. Examples: what happens if author never creates a resolution after approval? What if all executors are unavailable? What if a registrar never acts? These are real gaps — if Builder tags fewer than 3 scenarios as GAP or INFERRED, it's not reading critically enough."},
+        {"text": "Coverage map reveals that the spec has zero coverage on: search/filtering of documents, reporting/analytics, detailed access control rules (spec mentions it but doesn't define permission matrix), and archival retrieval. If coverage map shows 100% coverage, Builder is lying."},
+        {"text": "Scenarios about the approval chain modification (spec section 2.2: 'author can modify chain at any point before Approved') are tagged INFERRED or GAP — because the spec doesn't define what happens to already-completed approvals when the chain changes."}
       ]
     },
     {
       "id": "validator-unit-known",
       "prompt": "You are a Validator agent. You receive the original spec and Builder artifacts. You have NOT seen how these artifacts were created. Attack them. Find dead-end states, open questions, role conflicts, timing collisions, and missing functional areas.",
-      "expected_output": "Findings including dead-end states and open questions about the Approved state timeout",
+      "expected_output": "Findings that expose real problems a development team would hit during implementation",
       "files": ["files/edi-excerpt.md", "files/known-good-artifacts/builder-scenarios.md", "files/known-good-artifacts/builder-states.md"],
       "assertions": [
-        {"text": "At least 1 dead-end state identified (the Approved state with no resolution timeout is a known dead-end)"},
-        {"text": "At least 1 open question about what happens when a document stays in Approved state indefinitely"},
-        {"text": "Each open question has proposed options (A/B/C) with trade-offs"},
-        {"text": "Each finding has a severity rating (BLOCKER, HIGH, MEDIUM, or LOW)"},
-        {"text": "Findings do NOT reference Builder reasoning or how scenarios were created"},
-        {"text": "At least one finding about functional areas not covered by the spec (e.g., document search, reporting, user management, or retention/archival policies beyond the state transition)"}
+        {"text": "Validator identifies the 'Approved with no resolution' dead-end: a document can stay in Approved state forever because the spec defines no timeout, no reminder, and no escalation for creating a resolution. This is the most critical dead-end in this spec — missing it means Validator is not doing its job."},
+        {"text": "Open questions are specific and actionable — each one describes a concrete situation that a developer would face, proposes 2-3 realistic options (not academic), and rates severity. Vague questions like 'what about edge cases?' do not count."},
+        {"text": "Validator finds at least one issue that the Builder artifacts did NOT already flag. The value of Validator is finding what Builder missed — if Validator only confirms what Builder already tagged as GAP, it's adding no value."},
+        {"text": "Findings are grounded in the spec, not hallucinated. Every finding should reference which spec section or which Builder scenario it relates to. Findings about 'scalability' or 'performance' that the spec doesn't touch are noise, not signal."},
+        {"text": "Validator does NOT reference how the Builder created the scenarios. No phrases like 'the builder assumed', 'this was built because', 'the reasoning behind this scenario'. Validator sees only artifacts and spec — it has no knowledge of Builder's process."},
+        {"text": "Validator identifies functional areas the spec is completely silent about. The spec describes document lifecycle but says nothing about how users find documents (search), generate reports, or manage user accounts. These are legitimate missing areas for any enterprise system."}
       ]
     },
     {
       "id": "integration-ambiguous",
       "prompt": "/builder-validator files/ambiguous-spec.md --rounds 2 --mode fast",
-      "expected_output": "Many open questions and findings for this deliberately vague spec",
+      "expected_output": "Report that exposes the fundamental problems with this vague spec",
       "files": ["files/ambiguous-spec.md"],
       "assertions": [
-        {"text": "At least 5 open questions identified (the spec uses vague terms like 'as needed', 'appropriately', 'relevant parties')"},
-        {"text": "Verdict is NEEDS_WORK or NOT_READY (the spec is too vague to build from)"},
-        {"text": "Findings identify missing details: what leave types exactly, what company policy, what edge cases, what roles have what access"},
-        {"text": "Report generated with all required sections despite vague input"}
+        {"text": "Report identifies specific vague phrases from the spec and explains why they're problematic. 'Leave requests should follow company policy' — what policy? 'Handle edge cases appropriately' — which edge cases? 'Relevant parties should be notified' — who exactly? If the report just says 'spec is vague' without pointing to specific phrases, it's not useful."},
+        {"text": "Verdict is NEEDS_WORK or NOT_READY. A spec this vague cannot be built from — if verdict is READY, the skill is broken."},
+        {"text": "Open questions address the real gaps a developer would hit: What are the exact leave types and their rules? What happens when a request is partially approved? Can a manager reject after another manager approved? What's the notification mechanism? What does 'role-based access' mean specifically?"},
+        {"text": "Despite the vague input, the report is well-structured with all required sections. The skill handles poor input gracefully rather than producing garbage or giving up."}
       ]
     },
     {
       "id": "validator-unit-clean",
       "prompt": "You are a Validator agent. You receive the original spec and Builder artifacts for a simple todo application. Attack them. Find any issues.",
-      "expected_output": "Few or no significant findings for this clean, simple spec",
+      "expected_output": "Proportionate response: some findings about missing areas but no false crisis",
       "files": ["files/todo-spec.md", "files/known-clean-artifacts/builder-scenarios.md"],
       "assertions": [
-        {"text": "No BLOCKER findings (the todo spec is simple and complete for its scope)"},
-        {"text": "Total findings count is less than 8 (some LOW/MEDIUM findings are acceptable)"},
-        {"text": "If zero findings reported, a note acknowledges this is unusual and warrants review (cognitive rule #4)"}
+        {"text": "No BLOCKER findings. The todo spec is simple but complete for its stated scope. Inventing blockers for a todo app (e.g., 'no disaster recovery plan') is a sign of hallucination, not rigor."},
+        {"text": "Findings are proportionate to the spec's scope. A todo app doesn't need multi-user access control, audit trails, or compliance checks. Findings that apply enterprise standards to a personal todo app are noise. Acceptable findings: missing validation rules, no mention of data persistence, no error handling."},
+        {"text": "If Validator finds zero issues, it acknowledges this is unusual and notes that the spec's simplicity limits what can be attacked. Per cognitive rule #4: a perfect score on round 1 is suspicious and warrants a note."}
       ]
     },
     {
       "id": "integration-fast-edi",
       "prompt": "/builder-validator files/edi-excerpt.md --domain government --rounds 2 --mode fast",
-      "expected_output": "Full report.md and summary.json with findings, dead-ends, open questions, and BDD scenarios",
+      "expected_output": "Complete report that a project manager could use to decide whether to proceed with development",
       "files": ["files/edi-excerpt.md"],
       "assertions": [
-        {"text": "report.md contains Executive Summary section"},
-        {"text": "report.md contains a Verdict that is one of: READY, NEEDS_WORK, NOT_READY"},
-        {"text": "At least 1 dead-end state identified in the report"},
-        {"text": "At least 3 open questions with severity ratings and proposed options"},
-        {"text": "Coverage map identifies at least 1 functional area with zero coverage"},
-        {"text": "summary.json is valid JSON containing keys: scenarios_total, open_questions, dead_ends, verdict"},
-        {"text": "Round artifacts exist: rounds/round-1/ and rounds/round-2/ directories with Builder and Validator files"}
+        {"text": "Executive Summary gives a clear, honest assessment in 2-3 sentences that a non-technical stakeholder could understand. It states what was reviewed, the key risk, and the verdict. Not a list of features — a judgment."},
+        {"text": "Verdict is justified by the findings. If verdict is NOT_READY, there should be blockers. If NEEDS_WORK, there should be high-severity findings or dead-ends. The verdict should not contradict the evidence."},
+        {"text": "Dead-end states are described in a way that a business analyst would understand: what state the document gets stuck in, why it gets stuck, and what real-world consequence this has. Not just 'state X has no outgoing transition.'"},
+        {"text": "Open questions would make sense to the spec's author. They should expose things the author forgot to think about, not things the author deliberately left out of scope. Each question has proposed options that represent real trade-offs."},
+        {"text": "Round 2 shows improvement over round 1: Builder addressed some of Validator's findings, new scenarios were added or updated, and Validator either found new issues or confirmed resolution of old ones. If round 2 is identical to round 1, the iterative cycle is broken."},
+        {"text": "summary.json contains meaningful numbers that match the report content. scenarios_total, open_questions, dead_ends, and verdict should be consistent with what the report describes — not fabricated."},
+        {"text": "Government domain patterns (if applied) enhance the findings with government-specific concerns: document retention requirements, audit trail completeness, regulatory compliance gaps. Generic findings only do not justify the --domain flag."}
       ]
     },
     {
       "id": "integration-strict-edi",
       "prompt": "/builder-validator files/edi-excerpt.md --domain government --rounds 2 --mode strict",
-      "expected_output": "Same report structure as fast mode, but produced via isolated subagents",
+      "expected_output": "Report with genuine isolation — Validator findings show independent thinking, not echoing Builder",
       "files": ["files/edi-excerpt.md"],
       "assertions": [
-        {"text": "report.md contains all required sections: Executive Summary, Verdict, Findings, Dead-Ends, Open Questions, Scenarios, Coverage"},
-        {"text": "Validator findings do NOT contain phrases referencing Builder reasoning (e.g., 'the builder chose', 'builder decided', 'as built by')"},
-        {"text": "summary.json is valid JSON with all required keys"},
-        {"text": "At least 1 dead-end state identified"},
-        {"text": "At least 3 open questions with severity ratings"}
+        {"text": "Report contains all required sections and is coherent as a standalone document. A reader should understand the findings without needing to see the round artifacts."},
+        {"text": "Validator findings demonstrate independent analysis: they attack the spec and artifacts from a fresh perspective, not just confirm what Builder flagged. At least one Validator finding should address something Builder's scenarios didn't cover."},
+        {"text": "No evidence of context leakage: Validator does not reference Builder's internal reasoning, does not use phrases that suggest awareness of Builder's process, and does not merely rephrase Builder's GAP tags as findings."},
+        {"text": "Findings quality is comparable to or better than fast mode. If strict mode produces fewer or weaker findings than fast mode, something is wrong with the agent prompts or orchestration."},
+        {"text": "summary.json is valid and consistent with report content."}
       ]
     },
     {
       "id": "input-prompt",
       "prompt": "/builder-validator \"Online store: users browse products, add to cart, checkout with credit card or PayPal. Admin manages inventory and sees orders. Need email notifications for order status changes.\"",
-      "expected_output": "BDD scenarios generated from free-form idea, with many GAP-tagged scenarios and open questions about missing areas",
+      "expected_output": "Meaningful analysis from a brief informal description — demonstrating the skill works without formal specs",
       "files": [],
       "assertions": [
-        {"text": "At least 5 BDD scenarios generated from the free-form input"},
-        {"text": "Majority of scenarios tagged INFERRED or GAP (input is not a formal spec)"},
-        {"text": "At least 3 open questions about missing areas (e.g., returns/refunds, shipping, tax, user registration, payment failure handling)"},
-        {"text": "Report generated with all required sections despite informal input"}
+        {"text": "Builder extracts concrete scenarios from the informal input: browsing products, adding to cart, checkout flow with payment options, admin inventory management, order notifications. Scenarios are specific to THIS online store, not generic e-commerce boilerplate."},
+        {"text": "The majority of scenarios are tagged INFERRED or GAP because the input is a brief idea, not a spec. If most scenarios are SOLID, the Builder is pretending to have more information than it does."},
+        {"text": "Validator exposes the massive gaps in a 2-sentence idea: returns/refunds policy, shipping/delivery, tax calculation, user registration/authentication, payment failure handling, inventory sync, order cancellation. These are real concerns any developer would raise."},
+        {"text": "The report is useful despite the minimal input — it shows the stakeholder what they haven't thought about yet, turning a vague idea into a structured list of decisions to make."}
       ]
     },
     {
       "id": "input-russian",
       "prompt": "/builder-validator files/russian-spec.md --rounds 1",
-      "expected_output": "Report written entirely in Russian",
+      "expected_output": "Report entirely in Russian that reads naturally, not like machine translation",
       "files": ["files/russian-spec.md"],
       "assertions": [
-        {"text": "Report body is written in Russian, not English"},
-        {"text": "BDD scenarios use Russian language for descriptions"},
-        {"text": "Verdict field uses English keyword (READY, NEEDS_WORK, or NOT_READY)"},
-        {"text": "summary.json keys are in English, values in Russian where applicable"}
+        {"text": "The report body is written in Russian. Not translated-sounding Russian, but natural professional Russian that a business analyst in a Russian-speaking company would write. Technical terms should use accepted Russian equivalents where they exist."},
+        {"text": "BDD scenarios use Russian for descriptions and domain terms (e.g., 'заявка', 'согласование', 'исполнение'), not English terms transliterated into Cyrillic."},
+        {"text": "Verdict uses the English keyword (READY, NEEDS_WORK, or NOT_READY) — these are system constants, not translated."},
+        {"text": "summary.json keys are in English (scenarios_total, open_questions, etc.), but descriptive values are in Russian where they describe domain-specific content."}
       ]
     },
     {
       "id": "domain-banking",
       "prompt": "/builder-validator files/banking-workflow.md --domain banking --rounds 2",
-      "expected_output": "Report with banking-specific findings enhanced by domain patterns",
+      "expected_output": "Report with findings that demonstrate banking domain expertise, not just generic spec review",
       "files": ["files/banking-workflow.md"],
       "assertions": [
-        {"text": "Findings reference at least one banking-specific pattern (e.g., transaction limits, approval authority matrix, sanctions screening edge case)"},
-        {"text": "At least 1 finding about concurrent or timing-related issues (e.g., two approvals at same time, limit check race condition)"},
-        {"text": "Report contains findings beyond what generic analysis would produce"}
+        {"text": "Findings demonstrate banking domain awareness: they address concerns specific to payment processing that a generic reviewer might miss — threshold splitting (structuring), concurrent session balance checks, sanctions list update timing, approval authority during organizational changes, end-of-day cutoff edge cases."},
+        {"text": "At least one finding about timing or concurrency that the spec doesn't address: what happens if two operators submit payments that together exceed a limit but individually don't? What if an approver is replaced between approval stages? What if sanctions list updates while a payment is pending approval?"},
+        {"text": "Domain-enhanced findings add value beyond what the same spec would get without the --domain flag. The banking patterns should surface issues that generic dead-end/gap analysis would miss."}
       ]
     }
   ]
