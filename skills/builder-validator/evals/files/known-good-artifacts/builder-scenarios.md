@@ -4,120 +4,194 @@
 
 ### Scenario 1: Successful registration [SOLID]
 **Spec ref: Section 1.3**
-```gherkin
-Given an author has created a document in Draft state
-When the author submits the document for registration
-Then the document state changes to "On Registration"
-And the Registration Department receives a notification
-And a registrar assigns number in format TYPE-YYYY-NNNNN
-And the document state changes to "Registered"
+```
+ДАНО: Автор создал документ в состоянии "Черновик"
+КОГДА: Автор отправляет документ на регистрацию
+ТОГДА: Состояние меняется на "На регистрации"
+  И Отдел регистрации получает уведомление
+  И Регистратор присваивает номер в формате ТИП-ГГГГ-ННННН (напр. ORD-2025-00142)
+  И Состояние меняется на "Зарегистрирован"
+
+НЕ ДОЛЖНО:
+  - Присваивать дублирующийся номер в рамках одного типа и года
+  - Терять документ между состояниями "Черновик" и "На регистрации"
+  - Позволять регистрацию без заполнения обязательных полей
+
+EDGE CASES:
+  - Два документа одного типа подаются одновременно — номера уникальны
+  - Регистратор не действует в течение суток — нет эскалации (GAP в спеке)
 ```
 
-### Scenario 2: Registration number uniqueness [SOLID]
+### Scenario 2: Registration number boundary [SOLID]
 **Spec ref: Section 1.3**
-```gherkin
-Given two documents of type ORD are submitted in year 2025
-When both are registered
-Then each receives a unique sequential number (ORD-2025-00001, ORD-2025-00002)
-And no duplicate numbers exist within the same type and year
+```
+ДАНО: В текущем году зарегистрировано 99 999 документов типа ORD
+КОГДА: Регистрируется 100 000-й документ
+ТОГДА: Номер ORD-2025-100000 корректно присваивается
+
+ГРАНИЧНЫЕ ЗНАЧЕНИЯ:
+  - Номер 00001 (первый в году) — корректен
+  - Номер 99999 — корректен
+  - Номер 100000 — формат ННННН не вмещает, поведение не определено [GAP]
+
+НЕ ДОЛЖНО:
+  - Обрезать номер до 5 знаков молча
+  - Сбрасывать нумерацию без начала нового года
 ```
 
 ## Feature: Approval Workflow
 
 ### Scenario 3: Sequential approval — all approve [SOLID]
 **Spec ref: Section 2.1**
-```gherkin
-Given a registered document with approval chain [Manager, Director, Legal]
-When Manager approves the document
-Then the document moves to Director for approval
-When Director approves the document
-Then the document moves to Legal for approval
-When Legal approves the document
-Then the document state changes to "Approved"
+```
+ДАНО: Зарегистрированный документ с цепочкой согласования [Менеджер, Директор, Юрист]
+КОГДА: Менеджер утверждает документ
+ТОГДА: Документ переходит к Директору
+КОГДА: Директор утверждает документ
+ТОГДА: Документ переходит к Юристу
+КОГДА: Юрист утверждает документ
+ТОГДА: Состояние меняется на "Согласован"
+
+НЕ ДОЛЖНО:
+  - Пропускать согласующего в цепочке
+  - Менять порядок согласования без действия автора
+  - Показывать комментарии предыдущего согласующего следующему (влияние на независимость оценки) [INFERRED]
 ```
 
 ### Scenario 4: Approval rejection returns to draft [SOLID]
 **Spec ref: Section 2.1**
-```gherkin
-Given a document "On Approval" with approval chain [Manager, Director]
-And Manager has already approved
-When Director rejects the document with reason "Budget not allocated"
-Then the document state changes to "Draft"
-And the author receives a notification with rejection reason
-And all previous approvals are invalidated
+```
+ДАНО: Документ "На согласовании" с цепочкой [Менеджер, Директор]
+  И Менеджер уже утвердил
+КОГДА: Директор отклоняет с причиной "Бюджет не выделен"
+ТОГДА: Состояние меняется на "Черновик"
+  И Автор получает уведомление с причиной отклонения
+  И Все предыдущие утверждения аннулируются
+
+НЕ ДОЛЖНО:
+  - Сохранять предыдущие утверждения после отклонения
+  - Отклонять без указания причины
+  - Терять историю согласования (должна быть доступна для аудита)
 ```
 
 ### Scenario 5: Author modifies approval chain mid-process [INFERRED]
-**Spec ref: Section 2.2**
-```gherkin
-Given a document "On Approval" with chain [Manager, Director, Legal]
-And Manager has already approved
-When the author removes Director from the approval chain
-Then the document skips Director and moves to Legal
+**Spec ref: Section 2.2 — "автор может изменять цепочку в любой момент до состояния Согласован"**
+```
+ДАНО: Документ "На согласовании" с цепочкой [Менеджер, Директор, Юрист]
+  И Менеджер уже утвердил
+КОГДА: Автор удаляет Директора из цепочки согласования
+ТОГДА: Документ переходит к Юристу, минуя Директора
+
+НЕ ДОЛЖНО:
+  - Позволять удалить согласующего, который уже утвердил (что происходит с его утверждением?) [GAP]
+  - Позволять удалить ВСЕХ согласующих (документ попадёт в "Согласован" без проверки) [GAP]
+  - Позволять злонамеренно удалить того, кто отклонил бы документ, без аудит-следа
+
+EDGE CASES:
+  - Автор удаляет последнего согласующего — документ автоматически "Согласован"? [GAP]
+  - Автор добавляет нового согласующего после того как предыдущие уже утвердили
 ```
 
 ### Scenario 6: Substitute approver during absence [SOLID]
 **Spec ref: Section 2.3**
-```gherkin
-Given a document waiting for approval by Director
-And Director is on vacation with Substitute designated as Deputy
-When Deputy approves the document
-Then the approval is recorded under Deputy's name with note "acting for Director"
-And the document moves to the next approver
+```
+ДАНО: Документ ожидает утверждения Директором
+  И Директор в отпуске, назначен Заместитель
+КОГДА: Заместитель утверждает документ
+ТОГДА: Утверждение записывается от имени Заместителя с пометкой "за Директора"
+  И Документ переходит к следующему согласующему
+
+НЕ ДОЛЖНО:
+  - Скрывать факт замещения в истории согласования
+  - Позволять Заместителю действовать после возвращения Директора
+  - Позволять назначить заместителем того, кто уже в цепочке (конфликт ролей) [INFERRED]
+
+EDGE CASES:
+  - Директор вернулся, но Заместитель ещё не утвердил — кто имеет право?
+  - Заместитель тоже уходит в отпуск — второй уровень замещения? [GAP]
 ```
 
 ## Feature: Execution
 
 ### Scenario 7: Resolution with multiple executors [SOLID]
 **Spec ref: Section 3.1, 3.2**
-```gherkin
-Given an approved document
-When the author creates a resolution with executors [Alice deadline:2025-04-10, Bob deadline:2025-04-15]
-Then the document state changes to "On Execution"
-And Alice and Bob each receive a notification with their instructions
+```
+ДАНО: Согласованный документ
+КОГДА: Автор создаёт резолюцию с исполнителями [Алиса срок:2025-04-10, Боб срок:2025-04-15]
+ТОГДА: Состояние меняется на "На исполнении"
+  И Алиса и Боб получают уведомления с инструкциями
+
+НЕ ДОЛЖНО:
+  - Назначать исполнителя без указания срока
+  - Назначать деактивированного сотрудника
+  - Позволять создать пустую резолюцию (0 исполнителей)
+
+ГРАНИЧНЫЕ ЗНАЧЕНИЯ:
+  - 1 исполнитель — минимум
+  - Срок = сегодня — допустимо?
+  - Срок в прошлом — должна быть валидация [INFERRED]
 ```
 
-### Scenario 8: All executors complete — document executed [SOLID]
-**Spec ref: Section 3.2**
-```gherkin
-Given a document "On Execution" with executors [Alice, Bob]
-When Alice marks her task as done and attaches report
-And Bob marks his task as done and attaches report
-Then the document state changes to "Executed"
+### Scenario 8: Document approved but no resolution created [GAP]
+**Spec ref: Section 3.1 — gap: нет таймаута или напоминания**
+```
+ДАНО: Документ в состоянии "Согласован"
+КОГДА: Никто не создаёт резолюцию в течение любого периода
+ТОГДА: Документ остаётся в "Согласован" бессрочно
+  И Никакое уведомление не отправляется
+  И Никакая эскалация не происходит
+
+НЕ ДОЛЖНО:
+  - Автоматически переводить документ в другое состояние без действия человека
+  - Удалять или архивировать "зависший" документ без уведомления автора
+
+EDGE CASES:
+  - Автор уволился — кто создаст резолюцию?
+  - 100 документов "зависли" — нет отчёта для руководства [GAP]
 ```
 
 ### Scenario 9: Executor misses deadline [SOLID]
 **Spec ref: Section 3.3**
-```gherkin
-Given a document "On Execution" with executor Alice deadline 2025-04-10
-When the current date passes 2025-04-10
-Then the system sends a notification to the author
-And the document remains in "On Execution" state
 ```
+ДАНО: Документ "На исполнении", исполнитель Алиса, срок 2025-04-10
+КОГДА: Текущая дата превышает 2025-04-10
+ТОГДА: Система отправляет уведомление автору
+  И Документ остаётся в состоянии "На исполнении"
 
-### Scenario 10: Document approved but no resolution created [GAP]
-**Spec ref: Section 3.1 — gap: no timeout or reminder specified**
-```gherkin
-Given a document in "Approved" state
-When no resolution is created within any timeframe
-Then the document remains in "Approved" state indefinitely
-And no notification is sent
-And no escalation occurs
+НЕ ДОЛЖНО:
+  - Автоматически снимать задачу с исполнителя
+  - Автоматически продлевать срок без решения автора
+  - Блокировать работу других исполнителей по этому документу
+
+ГРАНИЧНЫЕ ЗНАЧЕНИЯ:
+  - Срок = сегодня 23:59 — уведомление в 00:00 следующего дня?
+  - Уведомление за 3 дня (Section 5) + уведомление о просрочке — оба отправляются?
+  - Исполнитель завершает задачу в день дедлайна в 23:58 — просрочка или нет?
 ```
 
 ## Feature: Notifications
 
-### Scenario 11: Deadline approaching notification [SOLID]
+### Scenario 10: Deadline approaching notification [SOLID]
 **Spec ref: Section 5**
-```gherkin
-Given a document "On Execution" with executor Alice deadline 2025-04-10
-When the current date is 2025-04-07 (3 days before deadline)
-Then the system sends a "deadline approaching" notification to Alice
+```
+ДАНО: Документ "На исполнении", исполнитель Алиса, срок 2025-04-10
+КОГДА: Текущая дата 2025-04-07 (3 дня до дедлайна)
+ТОГДА: Система отправляет уведомление "приближается срок" Алисе
+
+НЕ ДОЛЖНО:
+  - Отправлять повторные уведомления каждый день (или должно? — GAP)
+  - Отправлять уведомление если задача уже завершена
 ```
 
-### Scenario 12: Rejected document notification [SOLID]
-**Spec ref: Section 5**
-```gherkin
-Given a document rejected by an approver
-Then the author receives a rejection notification with the reason
+### Scenario 11: Notification delivery failure [GAP]
+**Spec ref: Section 5 — gap: не описано поведение при сбое доставки**
+```
+ДАНО: Система должна отправить уведомление исполнителю
+КОГДА: Email-сервер недоступен или адрес невалидный
+ТОГДА: Поведение не определено в спецификации
+
+НЕ ДОЛЖНО:
+  - Молча терять уведомление без записи в лог
+  - Блокировать бизнес-процесс из-за сбоя уведомления
+  - Считать задачу "уведомлённой" если уведомление не доставлено
 ```

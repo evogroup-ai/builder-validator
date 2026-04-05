@@ -29,6 +29,7 @@
         {"text": "Builder identifies genuinely ambiguous areas in the spec and tags them appropriately. Examples: what happens if author never creates a resolution after approval? What if all executors are unavailable? What if a registrar never acts? These are real gaps — if Builder tags fewer than 3 scenarios as GAP or INFERRED, it's not reading critically enough."},
         {"text": "Coverage map reveals that the spec has zero coverage on: search/filtering of documents, reporting/analytics, detailed access control rules (spec mentions it but doesn't define permission matrix), and archival retrieval. If coverage map shows 100% coverage, Builder is lying."},
         {"text": "Scenarios about the approval chain modification (spec section 2.2: 'author can modify chain at any point before Approved') are tagged INFERRED or GAP — because the spec doesn't define what happens to already-completed approvals when the chain changes."},
+        {"text": "Every scenario references a specific spec section (e.g., 'Spec ref: Section 2.1'). Per Pipeline v3 cognitive bug #4 (Hallucinated Authority): claims without source reference are potential hallucinations. If a scenario describes behavior not traceable to a spec section, it must be explicitly tagged GAP with a note that it was assumed."},
         {"text": "Every scenario has a НЕ ДОЛЖНО section with meaningful constraints specific to the EDI domain. Examples: document must not lose registration number during state transition, approval must not proceed if approver is deactivated without substitute, system must not silently skip a notification. Generic 'must not crash' without domain context does not count."},
         {"text": "Scenarios include negative cases and edge cases beyond happy paths. Per Pipeline v3 minimum: at least 2 negative scenarios and 2 edge cases per major feature area (registration, approval, execution)."}
       ]
@@ -84,7 +85,8 @@
         {"text": "Round 2 shows improvement over round 1: Builder addressed some of Validator's findings, new scenarios were added or updated, and Validator either found new issues or confirmed resolution of old ones. If round 2 is identical to round 1, the iterative cycle is broken."},
         {"text": "summary.json contains meaningful numbers that match the report content. scenarios_total, open_questions, dead_ends, and verdict should be consistent with what the report describes — not fabricated."},
         {"text": "Government domain patterns (if applied) enhance the findings with government-specific concerns: document retention requirements, audit trail completeness, regulatory compliance gaps. Generic findings only do not justify the --domain flag."},
-        {"text": "Builder's output includes НЕ ДОЛЖНО sections for each major scenario group. Validator explicitly attacks the completeness and specificity of these НЕ ДОЛЖНО sections. The final report reflects this adversarial dynamic — showing what Builder claimed must not happen, what Validator found missing, and how it was resolved in round 2."}
+        {"text": "Builder's output includes НЕ ДОЛЖНО sections for each major scenario group. Validator explicitly attacks the completeness and specificity of these НЕ ДОЛЖНО sections. The final report reflects this adversarial dynamic — showing what Builder claimed must not happen, what Validator found missing, and how it was resolved in round 2."},
+        {"text": "Report includes a Decision Log section (or Builder-Validator Debate Log) that summarizes: what Builder proposed in each round, what Validator attacked, which findings were accepted/rejected, and why. Per Pipeline v3 Gate 4: CTO needs this debate log to make GO/NO GO decision in 10 minutes. Without it, the report is not Gate 4-ready."}
       ]
     },
     {
@@ -98,6 +100,18 @@
         {"text": "No evidence of context leakage: Validator does not reference Builder's internal reasoning, does not use phrases that suggest awareness of Builder's process, and does not merely rephrase Builder's GAP tags as findings."},
         {"text": "Findings quality is comparable to or better than fast mode on three dimensions: (1) number of unique findings, (2) severity distribution — strict should not have fewer HIGH/BLOCKER findings, (3) specificity — findings should reference concrete spec sections and scenarios, not be vague. If strict mode is weaker on any dimension, something is wrong with agent isolation or prompts."},
         {"text": "summary.json contains keys scenarios_total, open_questions, dead_ends, and verdict. The numbers match what the report describes — if the report lists 3 dead-end states, dead_ends should be 3, not 0 or 10. Verdict in JSON matches the verdict in the report's Verdict section."}
+      ]
+    },
+    {
+      "id": "comparison-fast-strict",
+      "prompt": "Run builder-validator on the same EDI excerpt spec twice: once with --mode fast and once with --mode strict. Compare the results.",
+      "expected_output": "Quantified comparison showing Strict mode produces equal or better findings due to real context isolation",
+      "files": ["files/edi-excerpt.md"],
+      "assertions": [
+        {"text": "Both modes produce valid reports with all required sections. If either mode fails to produce a complete report, the comparison is invalid."},
+        {"text": "Strict mode findings demonstrate genuine independence: Validator in strict mode surfaces at least one finding that the fast mode Validator did not find. This proves the isolation adds analytical value, not just architectural purity."},
+        {"text": "Fast mode Validator findings do NOT reference Builder's internal reasoning — but if they subtly echo Builder's framing (same terminology, same structure, same order of concerns), note this as evidence of context leakage even without explicit references."},
+        {"text": "Comparison documents the trade-off honestly: Strict mode uses more tokens and time, but produces [equal/better/worse] findings. If Strict produces fewer findings, explain why — is it because Fast mode Validator was already good enough, or because Strict mode agent prompts need improvement?"}
       ]
     },
     {
@@ -132,7 +146,8 @@
       "assertions": [
         {"text": "Findings demonstrate banking domain awareness: they address concerns specific to payment processing that a generic reviewer might miss — threshold splitting (structuring), concurrent session balance checks, sanctions list update timing, approval authority during organizational changes, end-of-day cutoff edge cases."},
         {"text": "At least one finding about timing or concurrency that the spec doesn't address: what happens if two operators submit payments that together exceed a limit but individually don't? What if an approver is replaced between approval stages? What if sanctions list updates while a payment is pending approval?"},
-        {"text": "Domain-enhanced findings go beyond generic dead-end/gap analysis. Generic analysis of this spec would find: approval chain dead-ends, missing error handling for failed payments, no concurrent session rules. Banking domain analysis should additionally surface: structuring risk (splitting payments to avoid thresholds), sanctions list timing (what if list updates mid-approval), end-of-day cutoff races, or approval authority gaps during organizational changes. If all findings could have been made without banking knowledge, the domain flag added no value."}
+        {"text": "Domain-enhanced findings go beyond generic dead-end/gap analysis. Generic analysis of this spec would find: approval chain dead-ends, missing error handling for failed payments, no concurrent session rules. Banking domain analysis should additionally surface: structuring risk (splitting payments to avoid thresholds), sanctions list timing (what if list updates mid-approval), end-of-day cutoff races, or approval authority gaps during organizational changes. If all findings could have been made without banking knowledge, the domain flag added no value."},
+        {"text": "Builder scenarios include ГРАНИЧНЫЕ ЗНАЧЕНИЯ (boundary values) for the explicit thresholds in the spec: $10,000 and $100,000 approval levels. Per Pipeline v3: mandatory boundary testing = exact value, exact-1, exact+1. Example: payment of $9,999 (single approval), $10,000 (single or double?), $10,001 (double approval). Without boundary scenarios, Builder is ignoring the most common source of production bugs in payment systems."}
       ]
     }
   ]
