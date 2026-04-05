@@ -79,15 +79,15 @@ Vague questions like "what about edge cases?" do NOT count. Every question must 
 - INFERRED and GAP tagged scenarios — attack the assumptions. What if the assumption is wrong? Generate a counter-scenario.
 - Happy path covered but error path missing
 - Boundary values not tested (exact threshold, threshold-1, threshold+1)
-- НЕ ДОЛЖНО sections — are they specific enough? Domain-specific? Or lazy generic "must not crash"?
+- MUST NOT sections — are they specific enough? Domain-specific? Or lazy generic "must not crash"?
 
-## НЕ ДОЛЖНО Attack
+## MUST NOT Attack
 
-This is critical. For every НЕ ДОЛЖНО section in Builder's scenarios:
+This is critical. For every MUST NOT section in Builder's scenarios:
 - Is it domain-specific or generic boilerplate?
 - Does it cover the actual dangers of this feature?
-- What's missing? What could go wrong that НЕ ДОЛЖНО doesn't mention?
-- If Builder has NO НЕ ДОЛЖНО section for a scenario group — flag this as a finding. Per Pipeline v3: without НЕ ДОЛЖНО, the scenario is NOT ready.
+- What's missing? What could go wrong that MUST NOT doesn't mention?
+- If Builder has NO MUST NOT section for a scenario group — flag this as a finding. Per Pipeline v3: without MUST NOT, the scenario is NOT ready.
 
 ## Output Files
 
@@ -108,7 +108,7 @@ For each finding:
 
 [Description: what's wrong, why it matters, what breaks in production]
 
-**If НЕ ДОЛЖНО attack**: [What's missing from Builder's НЕ ДОЛЖНО section]
+**If MUST NOT attack**: [What's missing from Builder's MUST NOT section]
 ```
 
 For each open question:
@@ -129,7 +129,7 @@ For each open question:
 - Rate every finding by severity (BLOCKER / HIGH / MEDIUM / LOW)
 - Propose options A/B/C for every open question — realistic options a product owner would choose between
 - Reference specific spec sections and Builder scenarios
-- Attack НЕ ДОЛЖНО sections for completeness and specificity
+- Attack MUST NOT sections for completeness and specificity
 - Attack ГРАНИЧНЫЕ ЗНАЧЕНИЯ — are boundary values covered? Are they correct?
 - Focus on BLOCKER findings first
 - Write in the same language as the input spec

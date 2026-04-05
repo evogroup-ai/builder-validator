@@ -14,7 +14,7 @@
         {"text": "Glossary defines terms in a way that would help a new developer understand the domain, not just repeat the spec verbatim. Definitions add context or clarify boundaries."},
         {"text": "Coverage map honestly identifies what IS and ISN'T covered. If the spec has no mention of user authentication, error handling, or data persistence, the coverage map should flag these as uncovered — not pretend everything is handled."},
         {"text": "Builder does NOT invent features the spec doesn't mention or imply. No categories, no priorities, no collaboration, no recurring todos — unless explicitly tagged as GAP with a note that this was assumed."},
-        {"text": "Every scenario includes a НЕ ДОЛЖНО (MUST NOT) section that defines what the system must never do in that context. Per Pipeline v3: without НЕ ДОЛЖНО, the scenario is NOT ready. For a todo app, examples: system must not lose data silently, must not allow empty titles if spec says 'required', must not show deleted todos."},
+        {"text": "Every scenario includes a MUST NOT (MUST NOT) section that defines what the system must never do in that context. Per Pipeline v3: without MUST NOT, the scenario is NOT ready. For a todo app, examples: system must not lose data silently, must not allow empty titles if spec says 'required', must not show deleted todos."},
         {"text": "Scenarios include at least 2 negative scenarios (what happens when things go wrong) and at least 2 edge cases (boundary values, unusual inputs). Per Pipeline v3: happy path alone is never sufficient."}
       ]
     },
@@ -30,7 +30,7 @@
         {"text": "Coverage map reveals that the spec has zero coverage on: search/filtering of documents, reporting/analytics, detailed access control rules (spec mentions it but doesn't define permission matrix), and archival retrieval. If coverage map shows 100% coverage, Builder is lying."},
         {"text": "Scenarios about the approval chain modification (spec section 2.2: 'author can modify chain at any point before Approved') are tagged INFERRED or GAP — because the spec doesn't define what happens to already-completed approvals when the chain changes."},
         {"text": "Every scenario references a specific spec section (e.g., 'Spec ref: Section 2.1'). Per Pipeline v3 cognitive bug #4 (Hallucinated Authority): claims without source reference are potential hallucinations. If a scenario describes behavior not traceable to a spec section, it must be explicitly tagged GAP with a note that it was assumed."},
-        {"text": "Every scenario has a НЕ ДОЛЖНО section with meaningful constraints specific to the EDI domain. Examples: document must not lose registration number during state transition, approval must not proceed if approver is deactivated without substitute, system must not silently skip a notification. Generic 'must not crash' without domain context does not count."},
+        {"text": "Every scenario has a MUST NOT section with meaningful constraints specific to the EDI domain. Examples: document must not lose registration number during state transition, approval must not proceed if approver is deactivated without substitute, system must not silently skip a notification. Generic 'must not crash' without domain context does not count."},
         {"text": "Scenarios include negative cases and edge cases beyond happy paths. Per Pipeline v3 minimum: at least 2 negative scenarios and 2 edge cases per major feature area (registration, approval, execution)."}
       ]
     },
@@ -46,7 +46,7 @@
         {"text": "Findings are grounded in the spec, not hallucinated. Every finding should reference which spec section or which Builder scenario it relates to. Findings about 'scalability' or 'performance' that the spec doesn't touch are noise, not signal."},
         {"text": "Validator does NOT reference how the Builder created the scenarios. No phrases like 'the builder assumed', 'this was built because', 'the reasoning behind this scenario'. Validator sees only artifacts and spec — it has no knowledge of Builder's process."},
         {"text": "Validator identifies functional areas the spec is completely silent about. The spec describes document lifecycle but says nothing about how users find documents (search), generate reports, or manage user accounts. These are legitimate missing areas for any enterprise system."},
-        {"text": "Validator attacks the НЕ ДОЛЖНО sections in Builder's scenarios — are they specific enough? Do they cover real dangers? Per Pipeline v3: if Builder wrote 'must not crash' without domain-specific constraints, Validator should flag this as lazy НЕ ДОЛЖНО."}
+        {"text": "Validator attacks the MUST NOT sections in Builder's scenarios — are they specific enough? Do they cover real dangers? Per Pipeline v3: if Builder wrote 'must not crash' without domain-specific constraints, Validator should flag this as lazy MUST NOT."}
       ]
     },
     {
@@ -85,7 +85,7 @@
         {"text": "Round 2 shows improvement over round 1: Builder addressed some of Validator's findings, new scenarios were added or updated, and Validator either found new issues or confirmed resolution of old ones. If round 2 is identical to round 1, the iterative cycle is broken."},
         {"text": "summary.json contains meaningful numbers that match the report content. scenarios_total, open_questions, dead_ends, and verdict should be consistent with what the report describes — not fabricated."},
         {"text": "Government domain patterns (if applied) enhance the findings with government-specific concerns: document retention requirements, audit trail completeness, regulatory compliance gaps. Generic findings only do not justify the --domain flag."},
-        {"text": "Builder's output includes НЕ ДОЛЖНО sections for each major scenario group. Validator explicitly attacks the completeness and specificity of these НЕ ДОЛЖНО sections. The final report reflects this adversarial dynamic — showing what Builder claimed must not happen, what Validator found missing, and how it was resolved in round 2."},
+        {"text": "Builder's output includes MUST NOT sections for each major scenario group. Validator explicitly attacks the completeness and specificity of these MUST NOT sections. The final report reflects this adversarial dynamic — showing what Builder claimed must not happen, what Validator found missing, and how it was resolved in round 2."},
         {"text": "Report includes a Decision Log section (or Builder-Validator Debate Log) that summarizes: what Builder proposed in each round, what Validator attacked, which findings were accepted/rejected, and why. Per Pipeline v3 Gate 4: CTO needs this debate log to make GO/NO GO decision in 10 minutes. Without it, the report is not Gate 4-ready."}
       ]
     },

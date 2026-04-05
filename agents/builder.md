@@ -32,17 +32,18 @@ Read the entire input. Identify:
 
 ### Step 2: Generate BDD scenarios
 
-For each feature area, write scenarios in this format:
+For each feature area, write scenarios matching the input language:
 
+**English input:**
 ```
-СЦЕНАРИЙ: [Name] [SOLID|INFERRED|GAP]
+Scenario: [Name] [SOLID|INFERRED|GAP]
 Spec ref: [Section number or "no explicit section — inferred from context"]
 
-ДАНО: [Initial state / preconditions]
-КОГДА: [Action / trigger]
-ТОГДА: [Expected result / outcome]
+Given [Initial state / preconditions]
+When [Action / trigger]
+Then [Expected result / outcome]
 
-НЕ ДОЛЖНО:
+MUST NOT:
   - [What the system must NEVER do in this context]
   - [At least 2 constraints per scenario group]
 
@@ -50,13 +51,31 @@ EDGE CASES:
   - [Unusual input or timing]
   - [At least 2 per feature area]
 
-ГРАНИЧНЫЕ ЗНАЧЕНИЯ: (when the spec contains explicit numbers)
+BOUNDARY VALUES: (when the spec contains explicit numbers)
   - [Exact boundary value]
   - [Boundary - 1]
   - [Boundary + 1]
 ```
 
-If the input is in English, use Given/When/Then format instead of ДАНО/КОГДА/ТОГДА, but always include НЕ ДОЛЖНО (as MUST NOT), EDGE CASES, and BOUNDARY VALUES sections.
+**Russian input:**
+```
+СЦЕНАРИЙ: [Название] [SOLID|INFERRED|GAP]
+Ссылка на спек: [Раздел]
+
+ДАНО: [Начальное состояние]
+КОГДА: [Действие]
+ТОГДА: [Ожидаемый результат]
+
+НЕ ДОЛЖНО:
+  - [Что система НИКОГДА не должна делать]
+
+ГРАНИЧНЫЕ ЗНАЧЕНИЯ:
+  - [Точное граничное значение]
+  - [Граница - 1]
+  - [Граница + 1]
+```
+
+All BDD keywords must match the input language. Never mix languages within one scenario set.
 
 ### Confidence tags
 
@@ -110,7 +129,7 @@ Write these files to the output directory:
 ### DO:
 - Reference specific spec sections for every scenario ("Spec ref: Section 2.1")
 - Tag assumptions explicitly as INFERRED or GAP
-- Include НЕ ДОЛЖНО section for every scenario group — without it, the scenario is NOT ready
+- Include MUST NOT section for every scenario group — without it, the scenario is NOT ready
 - Include at least 2 negative scenarios and 2 edge cases per major feature area
 - Include ГРАНИЧНЫЕ ЗНАЧЕНИЯ when the spec contains explicit numbers (thresholds, limits, maximums)
 - Write in the same language as the input spec
@@ -120,7 +139,7 @@ Write these files to the output directory:
 - Invent features the spec doesn't mention or imply. If you want to suggest something, tag it GAP.
 - Fill gaps silently. Every assumption must be visible.
 - Write generic scenarios that could apply to any system. Reference THIS spec's entities.
-- Produce НЕ ДОЛЖНО sections with only generic constraints ("must not crash"). Be domain-specific.
+- Produce MUST NOT sections with only generic constraints ("must not crash"). Be domain-specific.
 - Suggest implementation details (database choice, API design, technology stack)
 
 ## If Round > 1
