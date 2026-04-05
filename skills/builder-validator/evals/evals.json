@@ -1,0 +1,120 @@
+{
+  "skill_name": "builder-validator",
+  "evals": [
+    {
+      "id": "builder-unit-minimal",
+      "prompt": "You are a Builder agent. Read the spec at the provided path and create BDD scenarios, a state machine, a glossary, and a coverage map. Write all output files to the specified output directory.",
+      "expected_output": "4 artifact files with BDD scenarios in Gherkin format, state transitions, glossary, and coverage map",
+      "files": ["files/todo-spec.md"],
+      "assertions": [
+        {"text": "Output contains at least 3 BDD scenarios with Given/When/Then format"},
+        {"text": "Each scenario has a confidence tag: SOLID, INFERRED, or GAP"},
+        {"text": "A state machine or state transition section lists at least 2 states (Open, Done) with transitions between them"},
+        {"text": "A glossary section defines at least 2 domain terms"},
+        {"text": "A coverage map lists feature areas with scenario counts"},
+        {"text": "No features are invented that are not in the spec or reasonably implied by it"}
+      ]
+    },
+    {
+      "id": "builder-unit-edi",
+      "prompt": "You are a Builder agent. Read the EDI specification excerpt and create BDD scenarios, a state machine, a glossary, and a coverage map. This is a complex enterprise document workflow system.",
+      "expected_output": "Comprehensive artifacts covering document lifecycle, approval, execution, and notifications",
+      "files": ["files/edi-excerpt.md"],
+      "assertions": [
+        {"text": "Output contains at least 15 BDD scenarios covering document lifecycle, approval, and execution"},
+        {"text": "State machine lists at least 5 states from the spec (Draft, On Registration, Registered, On Approval, Approved, On Execution, Executed, Archived)"},
+        {"text": "At least 3 scenarios are tagged GAP or INFERRED, indicating areas where the spec is silent"},
+        {"text": "Coverage map identifies at least one area with zero or low coverage"},
+        {"text": "References to external systems (e.g., registration number source) are tagged as GAP, not assumed"}
+      ]
+    },
+    {
+      "id": "validator-unit-known",
+      "prompt": "You are a Validator agent. You receive the original spec and Builder artifacts. You have NOT seen how these artifacts were created. Attack them. Find dead-end states, open questions, role conflicts, timing collisions, and missing functional areas.",
+      "expected_output": "Findings including dead-end states and open questions about the Approved state timeout",
+      "files": ["files/edi-excerpt.md", "files/known-good-artifacts/builder-scenarios.md", "files/known-good-artifacts/builder-states.md"],
+      "assertions": [
+        {"text": "At least 1 dead-end state identified (the Approved state with no resolution timeout is a known dead-end)"},
+        {"text": "At least 1 open question about what happens when a document stays in Approved state indefinitely"},
+        {"text": "Each open question has proposed options (A/B/C) with trade-offs"},
+        {"text": "Each finding has a severity rating (BLOCKER, HIGH, MEDIUM, or LOW)"},
+        {"text": "Findings do NOT reference Builder reasoning or how scenarios were created"},
+        {"text": "At least one finding about missing functional areas (search, reporting, or archiving)"}
+      ]
+    },
+    {
+      "id": "validator-unit-clean",
+      "prompt": "You are a Validator agent. You receive the original spec and Builder artifacts for a simple todo application. Attack them. Find any issues.",
+      "expected_output": "Few or no significant findings for this clean, simple spec",
+      "files": ["files/todo-spec.md", "files/known-clean-artifacts/builder-scenarios.md"],
+      "assertions": [
+        {"text": "No BLOCKER findings (the todo spec is simple and complete for its scope)"},
+        {"text": "Total findings count is less than 8 (some LOW/MEDIUM findings are acceptable)"},
+        {"text": "If zero findings reported, a note acknowledges this is unusual and warrants review (cognitive rule #4)"}
+      ]
+    },
+    {
+      "id": "integration-fast-edi",
+      "prompt": "/builder-validator files/edi-excerpt.md --domain government --rounds 2 --mode fast",
+      "expected_output": "Full report.md and summary.json with findings, dead-ends, open questions, and BDD scenarios",
+      "files": ["files/edi-excerpt.md"],
+      "assertions": [
+        {"text": "report.md contains Executive Summary section"},
+        {"text": "report.md contains a Verdict that is one of: READY, NEEDS_WORK, NOT_READY"},
+        {"text": "At least 1 dead-end state identified in the report"},
+        {"text": "At least 3 open questions with severity ratings and proposed options"},
+        {"text": "Coverage map identifies at least 1 functional area with zero coverage"},
+        {"text": "summary.json is valid JSON containing keys: scenarios_total, open_questions, dead_ends, verdict"},
+        {"text": "Round artifacts exist: rounds/round-1/ and rounds/round-2/ directories with Builder and Validator files"}
+      ]
+    },
+    {
+      "id": "integration-strict-edi",
+      "prompt": "/builder-validator files/edi-excerpt.md --domain government --rounds 2 --mode strict",
+      "expected_output": "Same report structure as fast mode, but produced via isolated subagents",
+      "files": ["files/edi-excerpt.md"],
+      "assertions": [
+        {"text": "report.md contains all required sections: Executive Summary, Verdict, Findings, Dead-Ends, Open Questions, Scenarios, Coverage"},
+        {"text": "Validator findings do NOT contain phrases referencing Builder reasoning (e.g., 'the builder chose', 'builder decided', 'as built by')"},
+        {"text": "summary.json is valid JSON with all required keys"},
+        {"text": "At least 1 dead-end state identified"},
+        {"text": "At least 3 open questions with severity ratings"}
+      ]
+    },
+    {
+      "id": "input-prompt",
+      "prompt": "/builder-validator \"Online store: users browse products, add to cart, checkout with credit card or PayPal. Admin manages inventory and sees orders. Need email notifications for order status changes.\"",
+      "expected_output": "BDD scenarios generated from free-form idea, with many GAP-tagged scenarios and open questions about missing areas",
+      "files": [],
+      "assertions": [
+        {"text": "At least 5 BDD scenarios generated from the free-form input"},
+        {"text": "Majority of scenarios tagged INFERRED or GAP (input is not a formal spec)"},
+        {"text": "At least 3 open questions about missing areas (e.g., returns/refunds, shipping, tax, user registration, payment failure handling)"},
+        {"text": "Report generated with all required sections despite informal input"}
+      ]
+    },
+    {
+      "id": "input-russian",
+      "prompt": "/builder-validator files/russian-spec.md --rounds 1",
+      "expected_output": "Report written entirely in Russian",
+      "files": ["files/russian-spec.md"],
+      "assertions": [
+        {"text": "Report body is written in Russian, not English"},
+        {"text": "BDD scenarios use Russian language for descriptions"},
+        {"text": "Verdict field uses English keyword (READY, NEEDS_WORK, or NOT_READY)"},
+        {"text": "summary.json keys are in English, values in Russian where applicable"}
+      ]
+    },
+    {
+      "id": "domain-banking",
+      "prompt": "/builder-validator files/banking-workflow.md --domain banking --rounds 2",
+      "expected_output": "Report with banking-specific findings enhanced by domain patterns",
+      "files": ["files/banking-workflow.md"],
+      "assertions": [
+        {"text": "Findings reference at least one banking-specific pattern (e.g., transaction limits, approval authority matrix, sanctions screening edge case)"},
+        {"text": "At least 1 finding about concurrent or timing-related issues (e.g., two approvals at same time, limit check race condition)"},
+        {"text": "Report contains findings beyond what generic analysis would produce"}
+      ]
+    }
+  ]
+}
