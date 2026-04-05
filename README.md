@@ -98,7 +98,7 @@ Key principles:
 
 ## Author
 
-Vadim Berkovich, CEO @ [EvoGroup](https://evogroup.ai)
+Vadim Berkovich, CTO @ [EvoGroup](https://evogroup.ai)
 
 ## License
 
