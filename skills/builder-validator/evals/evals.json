@@ -39,7 +39,19 @@
         {"text": "Each open question has proposed options (A/B/C) with trade-offs"},
         {"text": "Each finding has a severity rating (BLOCKER, HIGH, MEDIUM, or LOW)"},
         {"text": "Findings do NOT reference Builder reasoning or how scenarios were created"},
-        {"text": "At least one finding about missing functional areas (search, reporting, or archiving)"}
+        {"text": "At least one finding about functional areas not covered by the spec (e.g., document search, reporting, user management, or retention/archival policies beyond the state transition)"}
+      ]
+    },
+    {
+      "id": "integration-ambiguous",
+      "prompt": "/builder-validator files/ambiguous-spec.md --rounds 2 --mode fast",
+      "expected_output": "Many open questions and findings for this deliberately vague spec",
+      "files": ["files/ambiguous-spec.md"],
+      "assertions": [
+        {"text": "At least 5 open questions identified (the spec uses vague terms like 'as needed', 'appropriately', 'relevant parties')"},
+        {"text": "Verdict is NEEDS_WORK or NOT_READY (the spec is too vague to build from)"},
+        {"text": "Findings identify missing details: what leave types exactly, what company policy, what edge cases, what roles have what access"},
+        {"text": "Report generated with all required sections despite vague input"}
       ]
     },
     {
