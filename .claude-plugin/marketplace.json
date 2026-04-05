@@ -10,7 +10,7 @@
     {
       "name": "builder-validator",
       "description": "Run adversarial Builder-Validator cycles on specifications to find gaps, dead-end states, and missing requirements before writing code. Based on EvoGroup Pipeline v3.",
-      "source": ".",
+      "source": "./plugins/builder-validator",
       "category": "development",
       "homepage": "https://github.com/evogroup-ai/builder-validator"
     }

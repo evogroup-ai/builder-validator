@@ -1,0 +1,13 @@
+{
+  "name": "builder-validator",
+  "version": "0.1.0",
+  "description": "Builder-Validator spec review plugin — runs adversarial cycles to find gaps, dead-end states, and missing requirements before code is written",
+  "author": {
+    "name": "EvoGroup",
+    "email": "info@evogroup.ai",
+    "url": "https://evogroup.ai"
+  },
+  "repository": "https://github.com/evogroup-ai/builder-validator",
+  "license": "MIT",
+  "keywords": ["bdd", "spec-review", "requirements", "quality-assurance", "adversarial-testing"]
+}
